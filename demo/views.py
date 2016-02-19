@@ -10,7 +10,6 @@ import sunlight
 
 from .forms import ZipForm
 from .forms import AddressForm
-from .models import Location
 
 def index(request):
     # post requests come from the zip or address forms
@@ -34,8 +33,6 @@ def index(request):
         form = ZipForm()
         context = {"form": form}
         if lat != "" and lng != "":
-            # for now- upserts zip, lat, and lng from urls (for debugging or ?- remove for privacy)
-            Location.objects.update_or_create(zip=zip, lat=lat, lng=lng, defaults={})
             fed_reps = fedRepsByGeo(lat,lng)
             state_reps = stateRepsByGeo(lat,lng)
             execs = allExecs(zip)
