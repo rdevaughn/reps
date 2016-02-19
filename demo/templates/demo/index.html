@@ -1,0 +1,188 @@
+{% load staticfiles %}
+<link rel="stylesheet" type="text/css" href="{% static 'demo/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'demo/flaticon.css' %}">
+<script type="text/javascript" src="{% static 'js/jquery-2.2.0.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/jquery-ui.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'js/jquery-ui.css' %}" />
+<title>Demo</title>
+{% if fed_reps %}
+  <script type="text/javascript">
+    $("#map").empty();
+    $(document).on('ready', function(){
+        var acc = {% if reloaded %}0{% else %}2{% endif %};
+        $("#accordion").accordion();
+        $("#accordion").accordion( "option", "active", acc );
+        $("#accordion h3.ui-accordion-header").click(function(e) {
+          $("#office_dialog").dialog("close");
+          $("#address_dialog").dialog("close");
+        });
+        $( "#office_dialog" ).dialog({ autoOpen: false, minHeight: 0, position: { my: "left+40", at: "left+30" } });
+        $( "#address_dialog" ).dialog({ autoOpen: false, minHeight: 0, position: { my: "left+20", at: "left+40 top+340" } });
+        $("a.address").click(function(e) {
+          $("#address_dialog").dialog("open");
+          $(".ui-dialog :button").blur();
+        });
+        $("a.office").click(function(e) {
+          $("#office_dialog").empty();
+          $("#office_dialog").dialog('option', 'title', "Office of " + $(this).attr("data-rep"));
+          $("#office_dialog").append($(this).attr("data-addr"));
+          $("#office_dialog").dialog("open");
+          $(".ui-dialog :button").blur();
+        });
+        $("#street").click( function(e) {
+          $("#street").val("");
+          $("#street").css("color","black");
+        });
+        $("span.map_direct a").click(function() {
+          $("#accordion").accordion( "option", "active", 2 );
+        });
+    });
+
+    function initMap() {
+      var map;
+      map = new google.maps.Map($("#map")[0], {
+        center: {lat: {{ lat }}, lng: {{ lng }} },
+        zoom: {% if reloaded %}14{% else %}11{% endif %},
+        mapTypeControl: false,
+        streetViewControl: false,
+      });
+
+      var geocoder = new google.maps.Geocoder;
+      {% if reloaded %}
+      var marker = new google.maps.Marker({
+        position: {lat: {{ lat }}, lng: {{ lng }} },
+        map: map,
+        // title: 'Hello World!'
+      });
+      {% endif %}
+      map.addListener('click', function(e) {
+        var lat = e.latLng.lat();
+        var lng = e.latLng.lng();
+        // get reverse geocoded zip to maintain zip/ latlng consistency
+        geocoder.geocode({'location': {lat: lat, lng: lng}}, function(results, status) {
+          if (status === google.maps.GeocoderStatus.OK) {
+            if (results[1]) {
+              for(i = 0; i < results.length; i++) {
+                for(j = 0; j < results[i]["address_components"].length; j++ ) {
+                  if (results[i]["address_components"][j]["types"][0] == "postal_code") {
+                    var zip = results[i]["address_components"][j]["short_name"];
+                    window.location.replace("/demo/?zip=" + zip + "&lat=" + lat + "&lng=" + lng);
+                  }
+                }
+              }
+            } else {
+              window.location.replace("/demo/?zip={{ zip }}&lat=" + lat + "&lng=" + lng);
+            }
+          } else {
+            window.location.replace("/demo/?zip={{ zip }}&lat=" + lat + "&lng=" + lng);
+          }
+        });
+      });
+
+      $("#accordion").accordion({
+        activate: function(event, ui) {
+          google.maps.event.trigger(map,'resize');
+          map.setCenter({lat: {{ lat }}, lng: {{ lng }} });
+        }
+      });
+    }
+  </script>
+  <div id="loaded">
+    <h1>Reps for
+      <form action="/demo/" method="post">
+        {% csrf_token %}
+        <input id="zip" type="text" name="zip" value="{{ zip }}">
+      </form>
+    </h1>
+    <div style="clear:both"></div>
+    <div id="accordion">
+      <h3>Lawmakers</h3>
+      <div>
+        <div class="reps">
+          <div class="fed_reps">
+            <h3>Federal</h3>
+            {% for fed_rep in fed_reps %}
+              <span class="title">{{ fed_rep.title }},</span> {{ fed_rep.first_name}} {{ fed_rep.last_name }} ({{ fed_rep.party }}) <br />
+              <a class="{{ fed_rep.party }}" href="tel:{{ fed_rep.phone }}"><i class="flaticon-iphone26"></i></a> <a class="{{ fed_rep.party }} office" data-rep="{{ fed_rep.first_name}} {{ fed_rep.last_name }}" data-addr="{{ fed_rep.office }}"><i class="flaticon-banking2"></i></a> <a class="{{ fed_rep.party }}" href="{{ fed_rep.contact }}" target="_blank"><i class="flaticon-file242"></i></a> <a class="{{ fed_rep.party }}" href="http://www.twitter.com/{{ fed_rep.twitter }}" target="_blank"><i class="flaticon-twitter1"></i></a> <a class="{{ fed_rep.party }}" href="http://facebook.com/{{ fed_rep.facebook }}" target="_blank"><i class="flaticon-facebook56"></i></a>{% if fed_rep.youtube %} <a class="{{ fed_rep.party }}" href="http://youtube.com/{{ fed_rep.youtube }}" target="_blank"><i class="flaticon-logotype46"></i></a>{% endif %}{% if fed_rep.votesmart %} <a class="{{ fed_rep.party }}" href="http://votesmart.org/candidate/campaign-finance/{{ fed_rep.votesmart }}" target="_blank"><i class="flaticon-stock7"></i></a>{% endif %}<br />
+            {% endfor %}
+          </div>
+          {% if not state_reps %}
+          <div class="state_reps">
+            <h3>State</h3>
+            {% if reloaded %}<span class="warning">State lawmakers currently unavailable.</span>
+            {% else %} <span class="map_direct">Click your area on the <a>map</a>, or enter your address, to get state lawmakers.</span>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% if state_reps %}
+          <div class="state_reps">
+            <h3>State</h3>
+            {% for state_rep in state_reps %}
+              {{ state_rep.first_name }} {{ state_rep.last_name}}<span class="title">- {{ state_rep.chamber }} Chamber </span>({{ state_rep.party }})<br />
+              <a class="{{ state_rep.party }}" href="tel:{{ state_rep.phone }}"><i class="flaticon-iphone26"></i></a> <a class="{{ state_rep.party }} office" data-rep="{{ state_rep.first_name}} {{ state_rep.last_name }}" data-addr="{{ state_rep.office }}"><i class="flaticon-banking2"></i></a> <a class="{{ state_rep.party }}" href="mailto:{{ state_rep.email }}"><i class="flaticon-email5"></i></a> {% if state_rep.votesmart%}<a class="{{ state_rep.party }}" href="http://votesmart.org/candidate/campaign-finance/{{ state_rep.votesmart}}" target="_blank"><i class="flaticon-stock7"></i></a>{% endif %}<br />
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <h3>Executives</h3>
+      <div>
+        <div class="execs">
+          {% if fed_execs %}
+          <div class="fed_execs">
+            <h3>Federal</h3>
+            {% for fed_exec in fed_execs %}
+              <span class="title">{{ fed_exec.office }},</span> <br />
+              {{ fed_exec.name }} ({{ fed_exec.party}})<br />
+              <a class="{{ fed_exec.party }}" href="tel:{{ fed_exec.phone }}"><i class="flaticon-iphone26"></i></a> <a class="{{ fed_exec.party }} office" data-addr="{{ fed_exec.address }}" data-rep="{{ fed_exec.name }}"><i class="flaticon-banking2"></i></a> <a class="{{ fed_exec.party }}" href="http://twitter.com/{{ fed_exec.twitter }}" target="_blank"><i class="flaticon-twitter1"></i></a> <a class="{{ fed_exec.party }}" href="http://facebook.com/{{ fed_exec.facebook }}" target="_blank"><i class="flaticon-facebook56"></i></a>{% if fed_exec.youtube %} <a class="{{ fed_exec.party }}" href="http://youtube.com/{{ fed_exec.youtube }}" target="_blank"><i class="flaticon-logotype46"></i></a>{% endif %}<br />
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if state_execs %}
+          <div class="state_execs">
+            <h3>State</h3>
+            {% for state_exec in state_execs %}
+              <span class="title">{{ state_exec.office }},</span> {{ state_exec.name }} ({{ state_exec.party }})<br />
+              <a class="{{ state_exec.party }}" href="tel:{{ state_exec.phone }}"><i class="flaticon-iphone26"></i></a> {% if state_exec.address %}<a class="{{ state_exec.party }} office" data-addr="{{ state_exec.address }}" data-rep="{{ state_exec.name }}"><i class="flaticon-banking2"></i></a> {% endif %}<a class="{{ state_exec.party }}" href="http://twitter.com/{{ state_exec.twitter }}" target="_blank"><i class="flaticon-twitter1"></i></a> <a class="{{ state_exec.party }}" href="http://facebook.com/{{ state_exec.facebook }}" target="_blank"><i class="flaticon-facebook56"></i></a>{% if state_exec.youtube %} <a class="{{ state_exec.party }}" href="http://youtube.com/{{ state_exec.youtube }}" target="_blank"><i class="flaticon-logotype46"></i></a>{% endif %}<br />
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <h3>Location</h3>
+      <div>
+        <div class="controls">
+          <h3>Click your area on the map below, or enter your <a class="address">address</a> to get state lawmakers.</h3>
+          <div id="map"></div>
+          <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB81jaFOXf7mxIPfMtOPJiuJ2geLFwialo&callback=initMap">
+          </script>
+        </div>
+      </div>
+    </div>
+    <div id="office_dialog">
+    </div>
+    <div id="address_dialog" title="Your Address">
+      <form action="/demo/" method="post">
+        {% csrf_token %}
+        <input id="street" type="text" name="street" value="Number and Street">
+        <input type="hidden" name="zip" value="{{ zip }}">
+      </form>
+      <span class="note">For example: 123 Main St.</span>
+    </div>
+  </div>
+{% else %}
+  <div id="unloaded">
+    <div><h1>Reps for</h1></div>
+    <form action="/demo/" method="post">
+      {% csrf_token %}
+      <input id="zip" type="text" name="zip" value="Zip">
+    </form>
+  </div>
+  <script>
+    $("#zip").click( function(e) {
+      $("#zip").val("");
+      $("#zip").css("color","black");
+    });
+  </script>
+{% endif %}

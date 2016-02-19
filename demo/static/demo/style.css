@@ -1,0 +1,42 @@
+html, body { height: 100%; margin: 5; font-family: Arial, Sans-Serif; background: seashell; }
+
+h1 { float: left; margin: 5 0 5 35; font-weight: normal; color: #333; }
+
+a, a:visited { text-decoration: none; }
+
+.R { color: #ff4040!important; }
+.D { color: #007fff!important; }
+
+#loaded form { float: right; width: 150; padding: 0 0 0 10; margin: 0 0 0 0; }
+#loaded input[type="text"] { font-size: 26px; width: 85; }
+#loaded { width: 400; }
+#unloaded form { float: left; width: 140; padding: 5 0 0 10; }
+#unloaded input[type="text"] { font-size: 26px; width: 85; color: grey; }
+#unloaded { width: 400; }
+
+#map { height: 288; width: 350; padding-left:5; }
+
+.controls { float: left; width: 360; margin: 20; font-size: 14; }
+
+.fed_reps h3, .fed_execs h3 { margin: 0 0 5 0!important; }
+.state_reps h3, .state_execs h3 { margin: 5 0 5 0!important; }
+.controls h3 { margin: 0 auto; width: 93% }
+
+.reps, .execs { padding: 1em 2.2em; height: 315; overflow: auto; }
+
+.title { color: #888; font-style: italic; font-size: 14; }
+.note { font-size: 14; }
+
+#address_dialog form { margin-bottom: 10; }
+
+.map_direct { font-size: 14; }
+.map_direct a { cursor:pointer; font-weight: bold; }
+
+#accordion .ui-icon { display: none; }
+#office_dialog { color: #888; }
+
+.office { cursor:pointer; }
+.address { cursor:pointer; }
+
+#street { width: 100%; }
+#address_dialog input[type="text"] { color: grey; }
