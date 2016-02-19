@@ -3,6 +3,8 @@ executives). Data comes from the Sunlight Foundation's python-sunlight package, 
 Civic Information API. Inputs include a zip code, then a map click or an address (number and 
 street- added to zip).                                   
 
+The main files are demo/views.py, demo/templates/demo/index.html, demo/static/demo/style.css.
+
 to run app:
 sudo python manage.py runserver 80
 
