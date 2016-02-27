@@ -40,3 +40,5 @@ a, a:visited { text-decoration: none; }
 
 #street { width: 100%; }
 #address_dialog input[type="text"] { color: grey; }
+
+#main_warning { display: none; color: red; font-size: 16; font-weight: bold; float: left; padding-left: 40; }

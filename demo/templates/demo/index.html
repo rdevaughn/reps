@@ -89,11 +89,13 @@
   </script>
   <div id="loaded">
     <h1>Reps for
-      <form action="/demo/" method="post">
+      <form id="zip_form" action="/demo/" method="post">
         {% csrf_token %}
         <input id="zip" type="text" name="zip" value="{{ zip }}">
       </form>
     </h1>
+    <div style="clear:both"></div>
+    <div id="main_warning"></div>
     <div style="clear:both"></div>
     <div id="accordion">
       <h3>Lawmakers</h3>
@@ -174,15 +176,26 @@
 {% else %}
   <div id="unloaded">
     <div><h1>Reps for</h1></div>
-    <form action="/demo/" method="post">
+    <form id="zip_form" action="/demo/" method="post">
       {% csrf_token %}
       <input id="zip" type="text" name="zip" value="Zip">
     </form>
   </div>
-  <script>
-    $("#zip").click( function(e) {
-      $("#zip").val("");
-      $("#zip").css("color","black");
-    });
-  </script>
+  <div style="clear:both"></div>
+  <div id="main_warning"></div>
 {% endif %}
+<script>
+  $("#zip").click( function(e) {
+    $("#zip").val("");
+    $("#zip").css("color","black");
+  });
+  $("#zip_form").submit(function(e) {
+    var valid = /(^\d{5}$)|(^\d{5}-\d{4}$)/.test($("#zip").val());
+    if(valid) {
+      return;
+    } else {
+      e.preventDefault();
+      $("#main_warning").empty().append("Enter a 5 digit zip code.").css("display","block");
+    }
+  });
+</script>
